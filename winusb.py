@@ -30,15 +30,15 @@ class WinUSBApi(object):
 
 	def exec_function_winusb(self, function_name=None, *args):
 		function_caller = _configure_ctype_function(self._winusb_functions, function_name)
-		return function_caller(kwargs)
+		return function_caller(args)
 
 	def exec_function_kernel32(self, function_name=None, *args):
 		function_caller = _configure_ctype_function(self._kernel32_functions, function_name)
-		return function_caller(kwargs)
+		return function_caller(args)
 
 	def exec_function_setupapi(self, function_name=None, *args):
 		function_caller = _configure_ctype_function(self._setupapi_functions, function_name)
-		return function_caller(kwargs)
+		return function_caller(args)
 
 	def _configure_ctype_function(self, dll_dict_functions, function_name=None):
 		def _function_caller(*args):
@@ -88,4 +88,4 @@ class PspDeviceInterfaceData(Structure):
 
 
 class Psp_Device_Interface_Detail_Data(Structure):
-	_fields_ = [("cb_size", DWORD), ("device_path",c_ubyte)] #devicePath array
+	_fields_ = [("cb_size", DWORD), ("device_path",c_ubyte)] #devicePath array!!!
