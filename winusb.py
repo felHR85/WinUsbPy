@@ -1,6 +1,7 @@
 from ctypes import *
 from ctypes.wintypes import *
 from winusberror import WinUSBError
+from winusbutils import *
 
 class WinUSBApi(object):
 	""" Facade class wrapping USB library WinUSB"""
@@ -45,64 +46,21 @@ class WinUSBApi(object):
 		except WindowsError:
 			raise WinUSBError("SetupApi dll is not present")
 
-		""" Functions availabe from WinUsb dll and their types"""
-		self._winusb_functions = {}
-		self._winusb_restypes = {}
-		self._winusb_argtypes = {}
-
-		# BOOL __stdcall WinUsb_Initialize( _In_ HANDLE DeviceHandle,_Out_  PWINUSB_INTERFACE_HANDLE InterfaceHandle);
-		self._winusb_functions[self.WinUsb_Initialize] = self._windll.WinUsb_Initialize
-		self._winusb_restypes[self.WinUsb_Initialize] = BOOL
-		self._winusb_argtypes[self.WinUsb_Initialize] = [HANDLE, c_void_p]
-
-		#BOOL __stdcall WinUsb_ControlTransfer(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ WINUSB_SETUP_PACKET SetupPacket, _Out_ PUCHAR Buffer,_In_ ULONG BufferLength,_Out_opt_  PULONG LengthTransferred,_In_opt_  LPOVERLAPPED Overlapped);
-		self._winusb_functions[self.WinUsb_ControlTransfer] = self._windll.WinUsb_ControlTransfer
-		self._winusb_restypes[self.WinUsb_ControlTransfer] = BOOL
-		self._winusb_argtypes[self.WinUsb_ControlTransfer] = [c_void_p, UsbSetupPacket, pointer(c_ubyte), c_ulong, pointer(c_ulong), LpOverlapped] 
-
-		#BOOL __stdcall WinUsb_GetDescriptor(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ UCHAR DescriptorType,_In_ UCHAR Index,_In_ USHORT LanguageID,_Out_ PUCHAR Buffer,_In_ ULONG BufferLength,_Out_ PULONG LengthTransferred);
-		self._winusb_functions[self.WinUsb_GetDescriptor] = self._windll.WinUsb_GetDescriptor
-		self._winusb_restypes[self.WinUsb_GetDescriptor] = BOOL
-		self._winusb_argtypes[self.WinUsb_GetDescriptor] = [c_void_p, c_ubyte, c_ubyte, c_ushort, pointer(c_ubyte), c_ulong, pointer(c_ulong)]
-
-		#BOOL __stdcall WinUsb_ReadPipe( _In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ UCHAR PipeID,_Out_ PUCHAR Buffer,_In_ ULONG BufferLength,_Out_opt_ PULONG LengthTransferred,_In_opt_ LPOVERLAPPED Overlapped);
-		self._winusb_functions[self.WinUsb_ReadPipe] = self._windll.WinUsb_ReadPipe
-		self._winusb_restypes[self.WinUsb_ReadPipe] = BOOL
-		self._winusb_argtypes[self.WinUsb_ReadPipe] = [c_void_p, c_ubyte, pointer(c_ubyte), c_ulong, pointer(c_ulong), LpOverlapped]
-
-		#BOOL __stdcall WinUsb_WritePipe(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ UCHAR PipeID,_In_ PUCHAR Buffer,_In_ ULONG BufferLength,_Out_opt_  PULONG LengthTransferred,_In_opt_ LPOVERLAPPED Overlapped);
-		self._winusb_functions[self.WinUsb_WritePipe] = self._windll.WinUsb_WritePipe
-		self._winusb_restypes[self.WinUsb_WritePipe] = BOOL
-		self._winusb_argtypes[self.WinUsb_WritePipe] = [c_void_p, c_ubyte, pointer(c_ubyte), c_ulong, pointer(c_ulong), LpOverlapped]
-
-		#BOOL __stdcall WinUsb_Free(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle);
-		self._winusb_functions[self.WinUsb_Free] = self._windll.WinUsb_Free
-		self._winusb_restypes[self.WinUsb_Free] = BOOL
-		self._winusb_argtypes[self.WinUsb_Free] = [c_void_p]
-
-		#BOOL __stdcall WinUsb_QueryDeviceInformation(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ ULONG InformationType,_Inout_ PULONG BufferLength,_Out_ PVOID Buffer);
-		self._winusb_functions[self.WinUsb_QueryDeviceInformation] = self._windll.WinUsb_QueryDeviceInformation
-		self._winusb_restypes = BOOL
-		self._winusb_argtypes = [c_void_p, c_ulong, pointer(c_ulong), c_void_p]
-
-		#BOOL __stdcall WinUsb_QueryInterfaceSettings(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ UCHAR AlternateSettingNumber,_Out_ PUSB_INTERFACE_DESCRIPTOR UsbAltInterfaceDescriptor);
-		self._winusb_functions[self.WinUsb_QueryInterfaceSettings] = self._windll.WinUsb_QueryInterfaceSettings
-		self._winusb_restypes[self.WinUsb_QueryInterfaceSettings] = BOOL
-		self._winusb_argtypes[self.WinUsb_QueryInterfaceSettings] = [c_void_p, c_ubyte, UsbInterfaceDescriptor]
-
-		"""Functions needed from Kernel32 dll and their types"""
-		self._kernel32_functions = {}
-		self._kernel32_functions[self.Close_Handle] = self._kernel32.CloseHandle
-		self._kernel32_functions[self.ReadFile] = self._kernel32.ReadFile
-		self._kernel32_functions[self.CancelIo] = self._kernel32.CancelIo
-		self._kernel32_functions[self.WriteFile] = self._kernel32.WriteFile
-		self._kernel32_functions[self.SetEvent] = self._kernel32.SetEvent
-		self._kernel32_functions[self.WaitForSingleObject] = self._kernel32.WaitForSingleObject
-		self._kernel32_functions[self.CreateFileW] = self._kernel32.CreateFileW 
+		self._winusb_functions_dict = get_winusb_functions()
+		self._kernel32_functions_dict = get_kernel32_functions()
 
 		"""Functions needed from SetupApi dll"""
+		# TODO Refactor setupapi to winusbutils
 		self._setupapi_functions = {}
+		self._setupapi_restypes = {}
+		self._setupapi_argtypes = {}
+
+		#HDEVINFO SetupDiGetClassDevs(_In_opt_ const GUID *ClassGuid,_In_opt_ PCTSTR Enumerator,_In_opt_ HWND hwndParent,_In_ DWORD Flags);
 		self._setupapi_functions[self.SetupDiGetClassDevs] = self._setupapi.SetupDiGetClassDevs
+		self._setupapi_restypes = c_void_p
+		self._setupapi_argtypes = [GUID, c_wchar_p, HANDLE, DWORD]
+
+		#
 		self._setupapi_functions[self.SetupDiEnumDeviceInterfaces] = self._setupapi.SetupDiEnumDeviceInterfaces
 		self._setupapi_functions[self.SetupDiGetDeviceInterfaceDetail] = self._setupapi.SetupDiGetDeviceInterfaceDetail
 
@@ -113,9 +71,11 @@ class WinUSBApi(object):
 		return True
 
 	def exec_function_kernel32(self, function=None, **kwargs):
+		function_caller = _configure_ctype_function(self._kernel32_functions, function)
 		return True
 
 	def exec_function_setupapi(self, function=None, **kwargs):
+		function_caller = _configure_ctype_function(self._setupapi_functions, function)
 		return True
 
 	def _configure_ctype_function(self, dll_dict_functions, function=None):
@@ -131,9 +91,11 @@ class WinUSBApi(object):
 		_fields_ = [("request_type", c_ubyte), ("request", c_ubyte),
 					("value", c_ushort), ("index", c_ushort), ("length", c_ushort)]
 
+
 	""" LPOVERLAPPED still not defined. It will be NULL """
 	class LpOverlapped(Structure):
 		_fields_ = []
+
 
 	class UsbInterfaceDescriptor(Structure):
 		_fields_ = [("b_length",c_ubyte), ("b_descriptor_type",c_ubyte),
@@ -141,6 +103,17 @@ class WinUSBApi(object):
 					("b_num_endpoints",c_ubyte), ("b_interface_class",c_ubyte),
 					("b_interface_sub_class",c_ubyte), ("b_interface_protocol",c_ubyte),
 					("i_interface",c_ubyte)]
+
+
+	class LpSecurityAttributes(Structure):
+		_fields_ = [("n_length", DWORD), ("lp_security_descriptor", c_void_p), 
+				 	("b_Inherit_handle",BOOL)]
+
+
+	class GUID(Structure):
+		_fields_ = [("data1", DWORD), ("data2", WORD),
+					("data3", WORD), ("data4", c_byte)]
+
 	
 
 
