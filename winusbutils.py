@@ -1,5 +1,6 @@
+from ctypes	import *
 from ctypes.wintypes import *
-from winusb import UsbSetupPacket, LpOverlapped, UsbInterfaceDescriptor, LpSecurityAttributes, GUID, PspDevinfoData, PspDeviceInterfaceData, Psp_Device_Interface_Detail_Data
+from winusbclasses import UsbSetupPacket,LpOverlapped, UsbInterfaceDescriptor, LpSecurityAttributes, GUID, SpDevinfoData, SpDeviceInterfaceData, SpDeviceInterfaceDetailData
 
 WinUsb_Initialize = "WinUsb_Initialize"
 WinUsb_ControlTransfer = "WinUsb_ControlTransfer"
@@ -37,22 +38,22 @@ def get_winusb_functions(windll):
 	#BOOL __stdcall WinUsb_ControlTransfer(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ WINUSB_SETUP_PACKET SetupPacket, _Out_ PUCHAR Buffer,_In_ ULONG BufferLength,_Out_opt_  PULONG LengthTransferred,_In_opt_  LPOVERLAPPED Overlapped);
 	winusb_functions[WinUsb_ControlTransfer] = windll.WinUsb_ControlTransfer
 	winusb_restypes[WinUsb_ControlTransfer] = BOOL
-	winusb_argtypes[WinUsb_ControlTransfer] = [c_void_p, UsbSetupPacket, pointer(c_ubyte), c_ulong, pointer(c_ulong), LpOverlapped] 
+	winusb_argtypes[WinUsb_ControlTransfer] = [c_void_p, UsbSetupPacket, POINTER(c_ubyte), c_ulong, POINTER(c_ulong), LpOverlapped] 
 
 	#BOOL __stdcall WinUsb_GetDescriptor(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ UCHAR DescriptorType,_In_ UCHAR Index,_In_ USHORT LanguageID,_Out_ PUCHAR Buffer,_In_ ULONG BufferLength,_Out_ PULONG LengthTransferred);
 	winusb_functions[WinUsb_GetDescriptor] = windll.WinUsb_GetDescriptor
 	winusb_restypes[WinUsb_GetDescriptor] = BOOL
-	winusb_argtypes[WinUsb_GetDescriptor] = [c_void_p, c_ubyte, c_ubyte, c_ushort, pointer(c_ubyte), c_ulong, pointer(c_ulong)]
+	winusb_argtypes[WinUsb_GetDescriptor] = [c_void_p, c_ubyte, c_ubyte, c_ushort, POINTER(c_ubyte), c_ulong, POINTER(c_ulong)]
 
 	#BOOL __stdcall WinUsb_ReadPipe( _In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ UCHAR PipeID,_Out_ PUCHAR Buffer,_In_ ULONG BufferLength,_Out_opt_ PULONG LengthTransferred,_In_opt_ LPOVERLAPPED Overlapped);
 	winusb_functions[WinUsb_ReadPipe] = windll.WinUsb_ReadPipe
 	winusb_restypes[WinUsb_ReadPipe] = BOOL
-	winusb_argtypes[WinUsb_ReadPipe] = [c_void_p, c_ubyte, pointer(c_ubyte), c_ulong, pointer(c_ulong), LpOverlapped]
+	winusb_argtypes[WinUsb_ReadPipe] = [c_void_p, c_ubyte, POINTER(c_ubyte), c_ulong, POINTER(c_ulong), LpOverlapped]
 
 	#BOOL __stdcall WinUsb_WritePipe(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ UCHAR PipeID,_In_ PUCHAR Buffer,_In_ ULONG BufferLength,_Out_opt_  PULONG LengthTransferred,_In_opt_ LPOVERLAPPED Overlapped);
 	winusb_functions[WinUsb_WritePipe] = windll.WinUsb_WritePipe
 	winusb_restypes[WinUsb_WritePipe] = BOOL
-	winusb_argtypes[WinUsb_WritePipe] = [c_void_p, c_ubyte, pointer(c_ubyte), c_ulong, pointer(c_ulong), LpOverlapped]
+	winusb_argtypes[WinUsb_WritePipe] = [c_void_p, c_ubyte, POINTER(c_ubyte), c_ulong, POINTER(c_ulong), LpOverlapped]
 
 	#BOOL __stdcall WinUsb_Free(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle);
 	winusb_functions[WinUsb_Free] = windll.WinUsb_Free
@@ -61,8 +62,8 @@ def get_winusb_functions(windll):
 
 	#BOOL __stdcall WinUsb_QueryDeviceInformation(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ ULONG InformationType,_Inout_ PULONG BufferLength,_Out_ PVOID Buffer);
 	winusb_functions[WinUsb_QueryDeviceInformation] = windll.WinUsb_QueryDeviceInformation
-	winusb_restypes = BOOL
-	winusb_argtypes = [c_void_p, c_ulong, pointer(c_ulong), c_void_p]
+	winusb_restypes[WinUsb_QueryDeviceInformation] = BOOL
+	winusb_argtypes[WinUsb_QueryDeviceInformation] = [c_void_p, c_ulong, POINTER(c_ulong), c_void_p]
 
 	#BOOL __stdcall WinUsb_QueryInterfaceSettings(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ UCHAR AlternateSettingNumber,_Out_ PUSB_INTERFACE_DESCRIPTOR UsbAltInterfaceDescriptor);
 	winusb_functions[WinUsb_QueryInterfaceSettings] = windll.WinUsb_QueryInterfaceSettings
@@ -88,7 +89,7 @@ def get_kernel32_functions(kernel32):
 	#BOOL WINAPI ReadFile(_In_ HANDLE hFile,_Out_ LPVOID lpBuffer,_In_ DWORD nNumberOfBytesToRead,_Out_opt_ LPDWORD lpNumberOfBytesRead,_Inout_opt_ LPOVERLAPPED lpOverlapped);
 	kernel32_functions[ReadFile] = kernel32.ReadFile
 	kernel32_restypes[ReadFile] = BOOL
-	kernel32_argtypes[ReadFile] = [HANDLE, c_void_p, DWORD, pointer(DWORD), LpOverlapped]
+	kernel32_argtypes[ReadFile] = [HANDLE, c_void_p, DWORD, POINTER(DWORD), LpOverlapped]
 
 	#BOOL WINAPI CancelIo(_In_  HANDLE hFile);
 	kernel32_functions[CancelIo] = kernel32.CancelIo
@@ -98,7 +99,7 @@ def get_kernel32_functions(kernel32):
 	#BOOL WINAPI WriteFile(_In_ HANDLE hFile,_In_ LPCVOID lpBuffer,_In_ DWORD nNumberOfBytesToWrite,_Out_opt_ LPDWORD lpNumberOfBytesWritten,_Inout_opt_  LPOVERLAPPED lpOverlapped);
 	kernel32_functions[WriteFile] = kernel32.WriteFile
 	kernel32_restypes[WriteFile] = BOOL
-	kernel32_argtypes[WriteFile] = [HANDLE, c_void_p, DWORD, pointer(DWORD), LpOverlapped]
+	kernel32_argtypes[WriteFile] = [HANDLE, c_void_p, DWORD, POINTER(DWORD), LpOverlapped]
 
 	#BOOL WINAPI SetEvent(_In_ HANDLE hEvent);
 	kernel32_functions[SetEvent] = kernel32.SetEvent
@@ -127,19 +128,19 @@ def get_setupapi_functions(setupapi):
 	setupapi_argtypes = {}
 
 	#HDEVINFO SetupDiGetClassDevs(_In_opt_ const GUID *ClassGuid,_In_opt_ PCTSTR Enumerator,_In_opt_ HWND hwndParent,_In_ DWORD Flags);
-	setupapi_functions[SetupDiGetClassDevs] = setupapi.SetupDiGetClassDevs
-	setupapi_restypes[SetupDiGetClassDevs] = c_void_p
-	setupapi_argtypes[SetupDiGetClassDevs] = [GUID, c_wchar_p, HANDLE, DWORD]
+	setupapi_functions[SetupDiGetClassDevs] = setupapi.SetupDiGetClassDevsW
+	setupapi_restypes[SetupDiGetClassDevs] = HANDLE
+	setupapi_argtypes[SetupDiGetClassDevs] = [POINTER(GUID), c_wchar_p, HANDLE, DWORD]
 
 	#BOOL SetupDiEnumDeviceInterfaces(_In_ HDEVINFO DeviceInfoSet,_In_opt_ PSP_DEVINFO_DATA DeviceInfoData,_In_ const GUID *InterfaceClassGuid,_In_ DWORD MemberIndex,_Out_ PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData);
 	setupapi_functions[SetupDiEnumDeviceInterfaces] = setupapi.SetupDiEnumDeviceInterfaces
 	setupapi_restypes[SetupDiEnumDeviceInterfaces] = BOOL
-	setupapi_argtypes[SetupDiEnumDeviceInterfaces] = [c_void_p, PspDevinfoData, pointer(GUID), DWORD, PspDeviceInterfaceData]
+	setupapi_argtypes[SetupDiEnumDeviceInterfaces] = [c_void_p, POINTER(SpDevinfoData), POINTER(GUID), DWORD, POINTER(SpDeviceInterfaceData)]
 
 	#BOOL SetupDiGetDeviceInterfaceDetail(_In_ HDEVINFO DeviceInfoSet,_In_ PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData,_Out_opt_ PSP_DEVICE_INTERFACE_DETAIL_DATA DeviceInterfaceDetailData,_In_ DWORD DeviceInterfaceDetailDataSize,_Out_opt_  PDWORD RequiredSize,_Out_opt_  PSP_DEVINFO_DATA DeviceInfoData);
-	setupapi_functions[SetupDiGetDeviceInterfaceDetail] = setupapi.SetupDiGetDeviceInterfaceDetail
+	setupapi_functions[SetupDiGetDeviceInterfaceDetail] = setupapi.SetupDiGetDeviceInterfaceDetailW
 	setupapi_restypes[SetupDiGetDeviceInterfaceDetail] = BOOL
-	setupapi_argtypes[SetupDiGetDeviceInterfaceDetail] = [c_void_p, PspDeviceInterfaceData, Psp_Device_Interface_Detail_Data, DWORD, DWORD, PspDevinfoData]
+	setupapi_argtypes[SetupDiGetDeviceInterfaceDetail] = [c_void_p, SpDeviceInterfaceData, SpDeviceInterfaceDetailData, DWORD, DWORD, SpDevinfoData]
 
 	setupapi_dict["functions"] = setupapi_functions
 	setupapi_dict["restypes"] = setupapi_restypes
