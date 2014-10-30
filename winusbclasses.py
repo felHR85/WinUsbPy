@@ -1,6 +1,13 @@
 from ctypes import *
 from ctypes.wintypes import *
 
+"""Flags controlling what is included in the device information set built by SetupDiGetClassDevs"""
+DIGCF_DEFAULT = 0x00000001
+DIGCF_PRESENT = 0x00000002
+DIGCF_ALLCLASSES = 0x00000004
+DIGCF_PROFILE = 0x00000008
+DIGCF_DEVICE_INTERFACE = 0x00000010
+
 class UsbSetupPacket(Structure):
 	_fields_ = [("request_type", c_ubyte), ("request", c_ubyte),
 				("value", c_ushort), ("index", c_ushort), ("length", c_ushort)]
