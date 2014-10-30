@@ -140,7 +140,7 @@ def get_setupapi_functions(setupapi):
 	#BOOL SetupDiGetDeviceInterfaceDetail(_In_ HDEVINFO DeviceInfoSet,_In_ PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData,_Out_opt_ PSP_DEVICE_INTERFACE_DETAIL_DATA DeviceInterfaceDetailData,_In_ DWORD DeviceInterfaceDetailDataSize,_Out_opt_  PDWORD RequiredSize,_Out_opt_  PSP_DEVINFO_DATA DeviceInfoData);
 	setupapi_functions[SetupDiGetDeviceInterfaceDetail] = setupapi.SetupDiGetDeviceInterfaceDetailW
 	setupapi_restypes[SetupDiGetDeviceInterfaceDetail] = BOOL
-	setupapi_argtypes[SetupDiGetDeviceInterfaceDetail] = [c_void_p, SpDeviceInterfaceData, SpDeviceInterfaceDetailData, DWORD, DWORD, SpDevinfoData]
+	setupapi_argtypes[SetupDiGetDeviceInterfaceDetail] = [c_void_p, POINTER(SpDeviceInterfaceData), POINTER(SpDeviceInterfaceDetailData), DWORD, POINTER(DWORD), POINTER(SpDevinfoData)]
 
 	setupapi_dict["functions"] = setupapi_functions
 	setupapi_dict["restypes"] = setupapi_restypes
