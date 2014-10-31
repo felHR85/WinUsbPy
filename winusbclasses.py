@@ -47,4 +47,4 @@ class SpDeviceInterfaceData(Structure):
 
 
 class SpDeviceInterfaceDetailData(Structure):
-	_fields_ = [("cb_size", DWORD), ("device_path",c_ubyte)] #devicePath array!!!
+	_fields_ = [("cb_size", DWORD), ("device_path",WCHAR * 1)] #devicePath array!!!

@@ -19,9 +19,11 @@ CancelIo  = "CancelIo"
 WriteFile = "WriteFile"
 SetEvent  = "SetEvent"
 WaitForSingleObject = "WaitForSingleObject"
+GetLastError = "GetLastError"
 SetupDiGetClassDevs  = "SetupDiGetClassDevs"
 SetupDiEnumDeviceInterfaces = "SetupDiEnumDeviceInterfaces"
 SetupDiGetDeviceInterfaceDetail = "SetupDiGetDeviceInterfaceDetail"
+
 
 def get_winusb_functions(windll):
 	""" Functions availabe from WinUsb dll and their types"""
@@ -115,6 +117,11 @@ def get_kernel32_functions(kernel32):
 	kernel32_functions[CreateFileW] = kernel32.CreateFileW 
 	kernel32_restypes[CreateFileW] = HANDLE
 	kernel32_argtypes[CreateFileW] = [c_wchar_p, DWORD, DWORD, LpSecurityAttributes, DWORD, DWORD, HANDLE]
+
+	#DWORD WINAPI GetLastError(void)
+	kernel32_functions[GetLastError] = kernel32.GetLastError
+	kernel32_restypes[GetLastError] = DWORD
+	kernel32_argtypes[GetLastError] = []
 
 	kernel32_dict["functions"] = kernel32_functions
 	kernel32_dict["restypes"] = kernel32_restypes

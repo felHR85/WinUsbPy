@@ -3,32 +3,46 @@ from winusb import WinUSBApi
 from winusbutils import *
 from ctypes import *
 from ctypes.wintypes import *
-b=UsbSetupPacket()
+from winusbclasses import DIGCF_DEVICE_INTERFACE, DIGCF_PRESENT
+
 api = WinUSBApi()
 byte_array = c_byte * 8
 guid = GUID(0xA5DCBF10L, 0x6530, 0x11D2, byte_array(0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED))
-enumerator = c_wchar_p("USB")
-hwnd = HANDLE()
-flags = DWORD(18) # Devices present DIGCF_PRESENT
+flags = DWORD(DIGCF_DEVICE_INTERFACE | DIGCF_PRESENT)
 i = 0
 member_index = DWORD(i)
+required_size = c_ulong(0)
 
 sp_device_info_data = SpDevinfoData()
 sp_device_interface_data = SpDeviceInterfaceData()
+sp_device_interface_detail_data = SpDeviceInterfaceDetailData()
 
 """
 Enumerate all USB Devices
 """
-#Guid beter byref(guid)
 hdev_info = api.exec_function_setupapi("SetupDiGetClassDevs", byref(guid), None, None, flags)
 print hdev_info
 sp_device_interface_data.cb_size = sizeof(sp_device_interface_data)
+#sp_device_interface_data.cb_size = sizeof(SpDeviceInterfaceData)
+sp_device_info_data.cb_size = sizeof(sp_device_info_data)
+
 while api.exec_function_setupapi("SetupDiEnumDeviceInterfaces", hdev_info, None, byref(guid), member_index, byref(sp_device_interface_data)):
-	print sp_device_interface_data.cb_size
-	print sp_device_interface_data.interface_class_guid.data1
+	# Get the required buffer size
+	api.exec_function_setupapi("SetupDiGetDeviceInterfaceDetail", hdev_info, byref(sp_device_interface_data), None, 0, byref(required_size), None)
+	resize(sp_device_interface_detail_data, required_size.value)
+	
+	""" I have been stuck here for hours. cb_size must reflect the fix part of the Struct!!!!"""
+	sp_device_interface_detail_data.cb_size = sizeof(SpDeviceInterfaceDetailData) - sizeof(WCHAR * 1)
+	
+	if api.exec_function_setupapi("SetupDiGetDeviceInterfaceDetail", hdev_info, byref(sp_device_interface_data), byref(sp_device_interface_detail_data), required_size, byref(required_size), byref(sp_device_info_data)):
+		print "PATH: " +  wstring_at(byref(sp_device_interface_detail_data, sizeof(DWORD)))
+		#print sp_device_info_data.dev_inst
+	else:
+		error_code = api.exec_function_kernel32("GetLastError")
+		print "Error: " + str(error_code)
+
 	i += 1
 	member_index = DWORD(i)
+	required_size = c_ulong(0)
+	resize(sp_device_interface_detail_data, sizeof(SpDeviceInterfaceDetailData))
 
-
-#response_details = api.exec_function_setupapi("SetupDiGetDeviceInterfaceDetail", hdev_info, byref(sp_device_interface_data), byref(sp_device_interface_detail_data), interface_detail_size, byref(required_size), byref(sp_device_info_data)) 
-#print response_details
