@@ -27,7 +27,7 @@ class WinUSBApi(object):
 
 
 	def exec_function_winusb(self, function_name, *args):
-		function_caller = self._configure_ctype_function(self._winusb_functions_dic, function_name)
+		function_caller = self._configure_ctype_function(self._winusb_functions_dict, function_name)
 		return function_caller(args)
 
 	def exec_function_kernel32(self, function_name, *args):
@@ -41,7 +41,10 @@ class WinUSBApi(object):
 	def _configure_ctype_function(self, dll_dict_functions, function_name):
 		def _function_caller(*args):
 			function = dll_dict_functions["functions"][function_name]
-			function.restype = dll_dict_functions["restypes"][function_name]
-			function.argtypes = dll_dict_functions["argtypes"][function_name]
+			try:
+				function.restype = dll_dict_functions["restypes"][function_name]
+				function.argtypes = dll_dict_functions["argtypes"][function_name]
+			except KeyError:
+				pass
 			return function(*args[0])
 		return _function_caller

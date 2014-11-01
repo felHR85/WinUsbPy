@@ -13,7 +13,7 @@ WinUsb_QueryInterfaceSettings = "WinUsb_QueryInterfaceSettings"
 WinUsb_QueryPipe = "WinUsb_QueryPipe"
 WinUsb_ControlTransfer = "WinUsb_ControlTransfer"
 Close_Handle = "CloseHandle"
-CreateFileW = "CreateFileW"
+CreateFile = "CreateFileW"
 ReadFile = "ReadFile"
 CancelIo  = "CancelIo"
 WriteFile = "WriteFile"
@@ -35,7 +35,7 @@ def get_winusb_functions(windll):
 	# BOOL __stdcall WinUsb_Initialize( _In_ HANDLE DeviceHandle,_Out_  PWINUSB_INTERFACE_HANDLE InterfaceHandle);
 	winusb_functions[WinUsb_Initialize] = windll.WinUsb_Initialize
 	winusb_restypes[WinUsb_Initialize] = BOOL
-	winusb_argtypes[WinUsb_Initialize] = [HANDLE, c_void_p]
+	winusb_argtypes[WinUsb_Initialize] = [HANDLE, POINTER(c_void_p)]
 
 	#BOOL __stdcall WinUsb_ControlTransfer(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ WINUSB_SETUP_PACKET SetupPacket, _Out_ PUCHAR Buffer,_In_ ULONG BufferLength,_Out_opt_  PULONG LengthTransferred,_In_opt_  LPOVERLAPPED Overlapped);
 	winusb_functions[WinUsb_ControlTransfer] = windll.WinUsb_ControlTransfer
@@ -114,9 +114,7 @@ def get_kernel32_functions(kernel32):
 	kernel32_argtypes[WaitForSingleObject] = [HANDLE, DWORD]
 
 	#HANDLE WINAPI CreateFile(_In_ LPCTSTR lpFileName,_In_ DWORD dwDesiredAccess,_In_ DWORD dwShareMode,_In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,_In_ DWORD dwCreationDisposition,_In_ DWORD dwFlagsAndAttributes,_In_opt_ HANDLE hTemplateFile);
-	kernel32_functions[CreateFileW] = kernel32.CreateFileW 
-	kernel32_restypes[CreateFileW] = HANDLE
-	kernel32_argtypes[CreateFileW] = [c_wchar_p, DWORD, DWORD, LpSecurityAttributes, DWORD, DWORD, HANDLE]
+	kernel32_functions[CreateFile] = kernel32.CreateFileW 
 
 	#DWORD WINAPI GetLastError(void)
 	kernel32_functions[GetLastError] = kernel32.GetLastError

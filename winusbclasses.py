@@ -8,6 +8,20 @@ DIGCF_ALLCLASSES = 0x00000004
 DIGCF_PROFILE = 0x00000008
 DIGCF_DEVICE_INTERFACE = 0x00000010
 
+"""Flags controlling File acccess"""
+GENERIC_WRITE = (1073741824) 
+GENERIC_READ = (-2147483648)
+FILE_SHARE_READ = 1
+FILE_SHARE_WRITE = 2
+OPEN_EXISTING = 3
+OPEN_ALWAYS = 4
+FILE_ATTRIBUTE_NORMAL = 128
+FILE_FLAG_OVERLAPPED = 1073741824
+
+INVALID_HANDLE_VALUE = HANDLE(-1)
+
+
+
 class UsbSetupPacket(Structure):
 	_fields_ = [("request_type", c_ubyte), ("request", c_ubyte),
 				("value", c_ushort), ("index", c_ushort), ("length", c_ushort)]

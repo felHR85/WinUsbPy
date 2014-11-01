@@ -3,7 +3,7 @@ from winusb import WinUSBApi
 from winusbutils import *
 from ctypes import *
 from ctypes.wintypes import *
-from winusbclasses import DIGCF_DEVICE_INTERFACE, DIGCF_PRESENT
+from winusbclasses import DIGCF_DEVICE_INTERFACE, DIGCF_PRESENT, GENERIC_WRITE, GENERIC_READ, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, FILE_FLAG_OVERLAPPED, INVALID_HANDLE_VALUE
 
 api = WinUSBApi()
 byte_array = c_byte * 8
@@ -36,7 +36,6 @@ while api.exec_function_setupapi("SetupDiEnumDeviceInterfaces", hdev_info, None,
 	
 	if api.exec_function_setupapi("SetupDiGetDeviceInterfaceDetail", hdev_info, byref(sp_device_interface_data), byref(sp_device_interface_detail_data), required_size, byref(required_size), byref(sp_device_info_data)):
 		print "PATH: " +  wstring_at(byref(sp_device_interface_detail_data, sizeof(DWORD)))
-		#print sp_device_info_data.dev_inst
 	else:
 		error_code = api.exec_function_kernel32("GetLastError")
 		print "Error: " + str(error_code)
@@ -46,3 +45,16 @@ while api.exec_function_setupapi("SetupDiEnumDeviceInterfaces", hdev_info, None,
 	required_size = c_ulong(0)
 	resize(sp_device_interface_detail_data, sizeof(SpDeviceInterfaceDetailData))
 
+"""Open last encountered device"""
+path = wstring_at(byref(sp_device_interface_detail_data, sizeof(DWORD)))
+handle_file = api.exec_function_kernel32("CreateFileW", path, GENERIC_WRITE|GENERIC_READ, FILE_SHARE_WRITE|FILE_SHARE_READ, None, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED, None)
+if INVALID_HANDLE_VALUE == handle_file:
+	print "Error"
+else:
+	print "No error"
+	handle_winusb = c_void_p()
+	result = api.exec_function_winusb("WinUsb_Initialize", handle_file, byref(handle_winusb))
+	if result == 0:
+		error_code = api.exec_function_kernel32("GetLastError")
+		print "Error" + str(error_code)
+	print result
