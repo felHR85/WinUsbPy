@@ -1,6 +1,6 @@
 from ctypes	import *
 from ctypes.wintypes import *
-from winusbclasses import UsbSetupPacket,LpOverlapped, UsbInterfaceDescriptor, LpSecurityAttributes, GUID, SpDevinfoData, SpDeviceInterfaceData, SpDeviceInterfaceDetailData
+from winusbclasses import UsbSetupPacket,LpOverlapped, UsbInterfaceDescriptor, LpSecurityAttributes, GUID, SpDevinfoData, SpDeviceInterfaceData, SpDeviceInterfaceDetailData, PipeInfo
 
 WinUsb_Initialize = "WinUsb_Initialize"
 WinUsb_ControlTransfer = "WinUsb_ControlTransfer"
@@ -12,6 +12,7 @@ WinUsb_QueryDeviceInformation = "WinUsb_QueryDeviceInformation"
 WinUsb_QueryInterfaceSettings = "WinUsb_QueryInterfaceSettings"
 WinUsb_QueryPipe = "WinUsb_QueryPipe"
 WinUsb_ControlTransfer = "WinUsb_ControlTransfer"
+WinUsb_QueryPipe = "WinUsb_QueryPipe"
 Close_Handle = "CloseHandle"
 CreateFile = "CreateFileW"
 ReadFile = "ReadFile"
@@ -71,6 +72,10 @@ def get_winusb_functions(windll):
 	winusb_functions[WinUsb_QueryInterfaceSettings] = windll.WinUsb_QueryInterfaceSettings
 	winusb_restypes[WinUsb_QueryInterfaceSettings] = BOOL
 	winusb_argtypes[WinUsb_QueryInterfaceSettings] = [c_void_p, c_ubyte, UsbInterfaceDescriptor]
+
+	winusb_functions[WinUsb_QueryPipe] = windll.WinUsb_QueryPipe
+	winusb_restypes[WinUsb_QueryPipe] = BOOL
+	winusb_argtypes[WinUsb_QueryPipe] = [c_void_p, c_ubyte, c_ubyte, POINTER(PipeInfo)]
 
 	winusb_dict["functions"] = winusb_functions 
 	winusb_dict["restypes"] = winusb_restypes
@@ -151,3 +156,9 @@ def get_setupapi_functions(setupapi):
 	setupapi_dict["restypes"] = setupapi_restypes
 	setupapi_dict["argtypes"] = setupapi_argtypes 
 	return setupapi_dict
+
+def is_device(vid, pid, path):
+	if path.find(vid) != -1 and path.find(pid) != -1:
+		return True
+	else:
+		return False

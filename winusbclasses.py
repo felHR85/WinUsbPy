@@ -20,6 +20,12 @@ FILE_FLAG_OVERLAPPED = 1073741824
 
 INVALID_HANDLE_VALUE = HANDLE(-1)
 
+""" USB PIPE TYPE """
+PIPE_TYPE_CONTROL = 0
+PIPE_TYPE_ISO = 1
+PIPE_TYPE_BULK = 2
+PIPE_TYPE_INTERRUPT = 3
+
 
 
 class UsbSetupPacket(Structure):
@@ -33,11 +39,16 @@ class LpOverlapped(Structure):
 
 
 class UsbInterfaceDescriptor(Structure):
-	_fields_ = [("b_length",c_ubyte), ("b_descriptor_type",c_ubyte),
-				("b_interface_number",c_ubyte), ("b_alternate_setting",c_ubyte),
-				("b_num_endpoints",c_ubyte), ("b_interface_class",c_ubyte),
-				("b_interface_sub_class",c_ubyte), ("b_interface_protocol",c_ubyte),
-				("i_interface",c_ubyte)]
+	_fields_ = [("b_length", c_ubyte), ("b_descriptor_type", c_ubyte),
+				("b_interface_number", c_ubyte), ("b_alternate_setting", c_ubyte),
+				("b_num_endpoints", c_ubyte), ("b_interface_class", c_ubyte),
+				("b_interface_sub_class", c_ubyte), ("b_interface_protocol", c_ubyte),
+				("i_interface", c_ubyte)]
+
+
+class PipeInfo(Structure):
+	_fields_ = [("pipe_type", c_ulong,), ("pipe_id", c_ubyte),
+				("maximum_packet_size", c_ushort), ("interval", c_ubyte)]
 
 
 class LpSecurityAttributes(Structure):
@@ -62,3 +73,4 @@ class SpDeviceInterfaceData(Structure):
 
 class SpDeviceInterfaceDetailData(Structure):
 	_fields_ = [("cb_size", DWORD), ("device_path",WCHAR * 1)] #devicePath array!!!
+
