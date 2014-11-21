@@ -1,4 +1,5 @@
 """Test1: PL2303 serial port user-space driver using WINUSB"""
+import time
 from winusb import WinUSBApi
 from winusbutils import *
 from ctypes import *
@@ -9,6 +10,45 @@ pl2303_vid = "067b"
 pl2303_pid = "2303"
 path = ""
 interface_descriptor = UsbInterfaceDescriptor()
+
+""" USB Setup Packets """
+pkt1 = UsbSetupPacket(0xc0, 0x01, 0x8484, 0x00, 0x01)
+pkt2 = UsbSetupPacket(0x40, 0x01, 0x0404, 0x00, 0x00)
+pkt3 = UsbSetupPacket(0x40, 0x01, 0x0404, 0x00, 0x01)
+pkt4 = UsbSetupPacket(0xc0, 0x01, 0x8383, 0x00, 0x01)
+pkt5 = UsbSetupPacket(0xc0, 0x01, 0x8484, 0x00, 0x01)
+pkt6 = UsbSetupPacket(0x40, 0x01, 0x0404, 0x01, 0x00)
+pkt7 = UsbSetupPacket(0xc0, 0x01, 0x8484, 0x00, 0x01)
+pkt8 = UsbSetupPacket(0xc0, 0x01, 0x8383, 0x00, 0x01)
+pkt9 = UsbSetupPacket(0x40, 0x01, 0x0000, 0x01, 0x00)
+pkt10 = UsbSetupPacket(0x40, 0x01, 0x0001, 0x00, 0x00)
+pkt11 = UsbSetupPacket(0x40, 0x01, 0x0002, 0x44, 0x00)
+pkt12 = UsbSetupPacket(0x00, 0x01, 0x0001, 0x00, 0x00)
+
+pkt13 = UsbSetupPacket(0x21, 0x20, 0x0000, 0x00, 0x07)
+pkt14 = UsbSetupPacket(0x40, 0x01, 0x0505, 0x1311, 0x00)
+pkt15 = UsbSetupPacket(0x21, 0x22, 0x0001, 0x00, 0x00)
+pkt16 = UsbSetupPacket(0x40, 0x01, 0x0505, 0x1311, 0x00)
+pkt17 = UsbSetupPacket(0x21, 0x22, 0x0001, 0x00, 0x00)
+pkt18 = UsbSetupPacket(0xc0, 0x01, 0x0080, 0x00, 0x02)
+pkt19 = UsbSetupPacket(0xc0, 0x01, 0x0081, 0x00, 0x02)
+pkt20 = UsbSetupPacket(0x40, 0x01, 0x0000, 0x01, 0x00)
+
+""" USB Data"""
+hello = create_string_buffer("Hello")
+header = create_string_buffer("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x01\x08\x01\x00\x00\x08\x01\x00\x00\x08\x01\x00\x00\x08\x01\x00\x00\x08\x01\x00\x00\x08\x01\x00\x00\x08\x01\x00\x00")
+tx1 = create_string_buffer("\x18")
+tx2 = create_string_buffer("\x08")
+tx3 = create_string_buffer("\x08")
+tx4 = create_string_buffer("\x14")
+tx5 = create_string_buffer("\x14")
+tx6 = create_string_buffer("\x22")
+tx7 = create_string_buffer("\x3e")
+tx8 = create_string_buffer("\x22")
+tx9 = create_string_buffer("\x77")
+tx10 = create_string_buffer("\x00")
+tx11 = create_string_buffer("\x00")
+tx12 = create_string_buffer("\x00")
 
 api = WinUSBApi()
 byte_array = c_byte * 8
@@ -26,7 +66,7 @@ sp_device_interface_data.cb_size = sizeof(sp_device_interface_data)
 sp_device_info_data.cb_size = sizeof(sp_device_info_data)
 
 """
-Enumerate all USB Devices
+Enumerate all USB Devices Searching for a PL2303 device
 """
 hdev_info = api.exec_function_setupapi("SetupDiGetClassDevs", byref(guid), None, None, flags)
 
@@ -96,6 +136,61 @@ else:
 				endpoint_index = c_ubyte(i)
 
 			""" Control setup """
+			buff1 = c_ubyte()
+			buff2 = (c_ubyte *2)()
+			buff_set_line = (c_ubyte * 7)(0xc0, 0x12, 0x00, 0x00, 0x00, 0x00, 0x08)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt1, byref(buff1), c_ulong(1), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt2, byref(buff1), c_ulong(0), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt3, byref(buff1), c_ulong(1), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt4, byref(buff1), c_ulong(1), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt5, byref(buff1), c_ulong(1), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt6, byref(buff1), c_ulong(0), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt7, byref(buff1), c_ulong(1), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt8, byref(buff1), c_ulong(1), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt9, byref(buff1), c_ulong(0), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt10, byref(buff1), c_ulong(0), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt11, byref(buff1), c_ulong(0), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt12, byref(buff1), c_ulong(0), byref(c_ulong(0)), None)
+
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt13, byref(buff_set_line), c_ulong(7), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt14, byref(buff1), c_ulong(0), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt15, byref(buff1), c_ulong(0), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt16, byref(buff1), c_ulong(0), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt17, byref(buff1), c_ulong(0), byref(c_ulong(0)), None)
+
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt18, byref(buff2), c_ulong(1), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt19, byref(buff2), c_ulong(1), byref(c_ulong(0)), None)
+			api.exec_function_winusb("WinUsb_ControlTransfer", handle_winusb, pkt20, byref(buff1), c_ulong(0), byref(c_ulong(0)), None)
+
+			""" Send Data """
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), hello, c_ulong(5), byref(c_ulong(0)), None)
+			time.sleep(0.045)
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), header, c_ulong(42), byref(c_ulong(0)), None)
+			time.sleep(0.380)
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx1, c_ulong(1), byref(c_ulong(0)), None)
+			time.sleep(0.380)
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx2, c_ulong(1), byref(c_ulong(0)), None)
+			time.sleep(0.380)
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx3, c_ulong(1), byref(c_ulong(0)), None)
+			time.sleep(0.380)
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx4, c_ulong(1), byref(c_ulong(0)), None)
+			time.sleep(0.380)
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx5, c_ulong(1), byref(c_ulong(0)), None)
+			time.sleep(0.380)
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx6, c_ulong(1), byref(c_ulong(0)), None)
+			time.sleep(0.380)
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx7, c_ulong(1), byref(c_ulong(0)), None)
+			time.sleep(0.380)
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx8, c_ulong(1), byref(c_ulong(0)), None)
+			time.sleep(0.380)
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx9, c_ulong(1), byref(c_ulong(0)), None)
+			time.sleep(0.380)
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx10, c_ulong(1), byref(c_ulong(0)), None)
+			time.sleep(0.380)
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx11, c_ulong(1), byref(c_ulong(0)), None)
+			time.sleep(0.380)
+			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx12, c_ulong(1), byref(c_ulong(0)), None)
+			time.sleep(0.380)
 
 	else:
 		error_code = api.exec_function_kernel32("GetLastError")
