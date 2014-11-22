@@ -103,35 +103,45 @@ else:
 	if result != 0:
 		""" Get PL2303 Speed """
 		info_type = c_ulong(1)
-		buff = c_void_p()
-		result = api.exec_function_winusb("WinUsb_QueryDeviceInformation", handle_winusb, info_type, buff)
+		buff = (c_void_p * 1) ()
+		buff_length = c_ulong(sizeof(c_void_p))
+
+		result = api.exec_function_winusb("WinUsb_QueryDeviceInformation", handle_winusb, info_type, byref(buff_length),buff)
 		if result != 0:
-			print "SPEED: " + buff.value
+			print "Speed: " + str(buff[0])
+			
+		else:
+			error_code = api.exec_function_kernel32("GetLastError")
+			print "Error Query Device: " + str(error_code)
 
 		""" Interface Settings """
 		response = api.exec_function_winusb("WinUsb_QueryInterfaceSettings", handle_winusb ,c_ubyte(0), byref(interface_descriptor))
+		
+		if response == 0:
+			error_code = api.exec_function_kernel32("GetLastError")
+			print "Error Query Interface: " + str(error_code)
 		if response != 0:
-			print "bLength: " + interface_descriptor.b_length.value
-			print "bDescriptorType: " + interface_descriptor.b_descriptor_type.value
-			print "bInterfaceNumber: " + interface_descriptor.b_interface_number.value
-			print "bAlternateSetting: " + interface_descriptor.b_alternate_setting.value
-			print "bNumEndpoints " + interface_descriptor.b_num_endpoints.value
-			print "bInterfaceClass " + interface_descriptor.b_interface_class.value
-			print "bInterfaceSubClass: " + interface_descriptor.b_interface_sub_class.value
-			print "bInterfaceProtocol: " + interface_descriptor.b_interface_protocol.value
-			print "iInterface: " + interface_descriptor.i_interface.value
+			print "bLength: " + str(interface_descriptor.b_length)
+			print "bDescriptorType: " + str(interface_descriptor.b_descriptor_type)
+			print "bInterfaceNumber: " + str(interface_descriptor.b_interface_number)
+			print "bAlternateSetting: " + str(interface_descriptor.b_alternate_setting)
+			print "bNumEndpoints " + str(interface_descriptor.b_num_endpoints)
+			print "bInterfaceClass " + str(interface_descriptor.b_interface_class)
+			print "bInterfaceSubClass: " + str(interface_descriptor.b_interface_sub_class)
+			print "bInterfaceProtocol: " + str(interface_descriptor.b_interface_protocol)
+			print "iInterface: " + str(interface_descriptor.i_interface)
 
 			""" Endpoints information """
 			i = 0
 			endpoint_index = c_ubyte(0)
 			pipe_info = PipeInfo()
-			while i <= interface_descriptor.b_num_endpoints.value:
+			while i <= interface_descriptor.b_num_endpoints:
 				result = api.exec_function_winusb("WinUsb_QueryPipe", handle_winusb, c_ubyte(0), endpoint_index, byref(pipe_info))
 				if result != 0:
-					print "PipeType: " + pipe_info.pipe_type.value
-					print "PipeId: " + pipe_info.pipe_id.value
-					print "MaximumPacketSize: " + pipe_info.maximum_packet_size.value
-					print "Interval: " + pipe_info.interval.value
+					print "PipeType: " + str(pipe_info.pipe_type)
+					print "PipeId: " + str(pipe_info.pipe_id)
+					print "MaximumPacketSize: " + str(pipe_info.maximum_packet_size)
+					print "Interval: " + str(pipe_info.interval)
 				i += 1
 				endpoint_index = c_ubyte(i)
 
@@ -190,7 +200,6 @@ else:
 			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx11, c_ulong(1), byref(c_ulong(0)), None)
 			time.sleep(0.380)
 			api.exec_function_winusb("WinUsb_WritePipe", handle_winusb, c_ubyte(0x02), tx12, c_ulong(1), byref(c_ulong(0)), None)
-			time.sleep(0.380)
 
 	else:
 		error_code = api.exec_function_kernel32("GetLastError")
