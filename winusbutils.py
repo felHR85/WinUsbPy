@@ -10,6 +10,7 @@ WinUsb_WritePipe = "WinUsb_WritePipe"
 WinUsb_Free = "WinUsb_Free"
 WinUsb_QueryDeviceInformation = "WinUsb_QueryDeviceInformation"
 WinUsb_QueryInterfaceSettings = "WinUsb_QueryInterfaceSettings"
+WinUsb_GetAssociatedInterface = "WinUsb_GetAssociatedInterface"
 WinUsb_QueryPipe = "WinUsb_QueryPipe"
 WinUsb_ControlTransfer = "WinUsb_ControlTransfer"
 WinUsb_QueryPipe = "WinUsb_QueryPipe"
@@ -76,6 +77,10 @@ def get_winusb_functions(windll):
 	winusb_functions[WinUsb_QueryPipe] = windll.WinUsb_QueryPipe
 	winusb_restypes[WinUsb_QueryPipe] = BOOL
 	winusb_argtypes[WinUsb_QueryPipe] = [c_void_p, c_ubyte, c_ubyte, POINTER(PipeInfo)]
+
+	winusb_functions[WinUsb_GetAssociatedInterface] = windll.WinUsb_GetAssociatedInterface
+	winusb_restypes[WinUsb_GetAssociatedInterface] = BOOL
+	winusb_argtypes[WinUsb_GetAssociatedInterface] = [c_void_p, c_ubyte, POINTER(c_void_p)]
 
 	winusb_dict["functions"] = winusb_functions 
 	winusb_dict["restypes"] = winusb_restypes
