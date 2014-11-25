@@ -2,7 +2,7 @@ from winusb import WinUSBApi
 from winusbclasses import GUID, DIGCF_ALLCLASSES, DIGCF_DEFAULT, DIGCF_PRESENT, DIGCF_PROFILE, DIGCF_DEVICE_INTERFACE, SpDeviceInterfaceData,  SpDeviceInterfaceDetailData, SpDevinfoData, GENERIC_WRITE, GENERIC_READ, FILE_SHARE_WRITE, FILE_SHARE_READ, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, FILE_FLAG_OVERLAPPED, INVALID_HANDLE_VALUE, UsbInterfaceDescriptor, PipeInfo
 from ctypes import c_byte, byref, sizeof, c_ulong, resize, wstring_at, c_void_p, c_ubyte, create_string_buffer
 from ctypes.wintypes import DWORD, WCHAR
-from winusbutils import SetupDiGetClassDevs, SetupDiEnumDeviceInterfaces, SetupDiGetDeviceInterfaceDetail, is_device, CreateFileW, WinUsb_Initialize, Close_Handle, WinUsb_Free, GetLastError, WinUsb_QueryDeviceInformation, WinUsb_GetAssociatedInterface, WinUsb_QueryInterfaceSettings, WinUsb_QueryPipe, WinUsb_ControlTransfer, WinUsb_WritePipe, WinUsb_ReadPipe
+from winusbutils import SetupDiGetClassDevs, SetupDiEnumDeviceInterfaces, SetupDiGetDeviceInterfaceDetail, is_device, CreateFile, WinUsb_Initialize, Close_Handle, WinUsb_Free, GetLastError, WinUsb_QueryDeviceInformation, WinUsb_GetAssociatedInterface, WinUsb_QueryInterfaceSettings, WinUsb_QueryPipe, WinUsb_ControlTransfer, WinUsb_WritePipe, WinUsb_ReadPipe
 
 class WinUsbPy(object):
 
@@ -73,7 +73,7 @@ class WinUsbPy(object):
 		except IndexError:
 			return False
 
-		self.handle_file = self.api.exec_function_kernel32(CreateFileW, path, GENERIC_WRITE|GENERIC_READ, FILE_SHARE_WRITE|FILE_SHARE_READ, None, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED, None)
+		self.handle_file = self.api.exec_function_kernel32(CreateFile, path, GENERIC_WRITE|GENERIC_READ, FILE_SHARE_WRITE|FILE_SHARE_READ, None, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED, None)
 
 		if self.handle_file == INVALID_HANDLE_VALUE:
 			return False
@@ -155,12 +155,12 @@ class WinUsbPy(object):
 			buffer_length  = 0
 		
 		result = self.api.exec_function_winusb(WinUsb_ControlTransfer, self.handle_winusb, setup_packet, byref(buff), c_ulong(buffer_length), byref(c_ulong(0)), None)
-		return {"result":result != 0, "buffer":list(buff)}
+		return {"result":result != 0, "buffer":[buff]}
 
 
 	def write(self, pipe_id, write_buffer):
 		write_buffer = create_string_buffer(write_buffer)
-		return self.api.exec_function_winusb(WinUsb_WritePipe, self.handle_winusb, c_ubyte(pipe_id), write_buffer, c_ulong(len(write_buffer)), byref(c_ulong(0)), None)
+		return self.api.exec_function_winusb(WinUsb_WritePipe, self.handle_winusb, c_ubyte(pipe_id), write_buffer, c_ulong(len(write_buffer) - 1), byref(c_ulong(0)), None)
 
 
 	def read(self, pipe_id, length_buffer):

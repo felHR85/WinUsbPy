@@ -1,4 +1,6 @@
-from winusbfacade import WinUsbPy
+import time
+from winusbpy import WinUsbPy
+from winusbutils import UsbSetupPacket
 pl2303_vid = "067b"
 pl2303_pid = "2303"
 
@@ -97,17 +99,32 @@ if result > 0:
 		api.control_transfer(pkt19, buff=[0,0])
 		api.control_transfer(pkt20, buff=None)
 
+		api.write(0x02, hello)
+		time.sleep(0.045)
+		api.write(0x02, header)
+		time.sleep(0.380)
 		api.write(0x02, tx1)
+		time.sleep(0.380)
 		api.write(0x02, tx2)
+		time.sleep(0.380)
 		api.write(0x02, tx3)
+		time.sleep(0.380)
 		api.write(0x02, tx4)
+		time.sleep(0.380)
 		api.write(0x02, tx5)
+		time.sleep(0.380)
 		api.write(0x02, tx6)
+		time.sleep(0.380)
 		api.write(0x02, tx7)
+		time.sleep(0.380)
 		api.write(0x02, tx8)
+		time.sleep(0.380)
 		api.write(0x02, tx9)
+		time.sleep(0.380)
 		api.write(0x02, tx10)
+		time.sleep(0.380)
 		api.write(0x02, tx11)
+		time.sleep(0.380)
 		api.write(0x02, tx12)
 
 
