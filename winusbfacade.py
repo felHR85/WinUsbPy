@@ -60,12 +60,12 @@ class WinUsbPy(object):
 		return len(self.device_paths) > 0
 	
 
-	def find_device(self, path): #Refactoring pythonic
+	def find_device(self, path): 
 		return is_device(self._vid, self._pid, path)
 		
 
 
-	def init_winusb_device(self, vid, pid): #Refactoring pythonic
+	def init_winusb_device(self, vid, pid): 
 		self._vid = vid
 		self._pid = pid
 		try:
@@ -143,8 +143,8 @@ class WinUsbPy(object):
 
 
 	def control_transfer(self, setup_packet, buff=None):
-		if setup_packet.length > 0:
-			if buff != None: # Host 2 Device 
+		if buff != None:
+			if setup_packet.length > 0: # Host 2 Device 
 				buff = (c_ubyte * setup_packet.length) (* buff)
 				buffer_length = setup_packet.length
 			else: # Device 2 Host
@@ -155,7 +155,7 @@ class WinUsbPy(object):
 			buffer_length  = 0
 		
 		result = self.api.exec_function_winusb(WinUsb_ControlTransfer, self.handle_winusb, setup_packet, byref(buff), c_ulong(buffer_length), byref(c_ulong(0)), None)
-		return result != 0
+		return {"result":result != 0, "buffer":list(buff)}
 
 
 	def write(self, pipe_id, write_buffer):
@@ -165,7 +165,7 @@ class WinUsbPy(object):
 
 	def read(self, pipe_id, length_buffer):
 		read_buffer = create_string_buffer(length_buffer)
-		result = self.api.exec_function_winusb(WinUsb_ReadPipe, self.handle_winusb, c_ubyte(pipe_id), read_buffer, c_ulong(read_buffer), byref(c_ulong(0)), None)
+		result = self.api.exec_function_winusb(WinUsb_ReadPipe, self.handle_winusb, c_ubyte(pipe_id), read_buffer, c_ulong(length_buffer), byref(c_ulong(0)), None)
 		if result != 0:
 			return read_buffer
 		else:
