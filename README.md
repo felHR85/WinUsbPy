@@ -18,20 +18,20 @@ Low Level Api
 ========
 Low level api offers three methods for invoking functions from three different dlls.
 
-~~~
+``` python
 #args: arguments of the C++ function called
-def exec_function_winusb(self, function_name, *args)
-def exec_function_kernel32(self, function_name, *args)
-def exec_function_setupapi(self, function_name, *args)
-~~~
+def exec_function_winusb(self, function_name, *args):
+def exec_function_kernel32(self, function_name, *args):
+def exec_function_setupapi(self, function_name, *args):
+```
 
 if we need to call [SetupDiGetClassDevs](http://msdn.microsoft.com/en-us/library/windows/hardware/ff551069%28v=vs.85%29.aspx) which presents this prototype:
 
-~~~
+``` c++
 HDEVINFO SetupDiGetClassDevs(_In_opt_ const GUID *ClassGuid,_In_opt_ PCTSTR Enumerator,_In_opt_ HWND hwndParent,_In_ DWORD Flags);
-~~~
+```
 
-~~~
+``` python
 from winusbpy import *
 from ctypes import *
 from ctypes.wintypes import *
@@ -43,7 +43,7 @@ guid = GUID(0xA5DCBF10L, 0x6530, 0x11D2, byte_array(0x90, 0x1F, 0x00, 0xC0, 0x4F
 flags = DWORD(DIGCF_DEVICE_INTERFACE | DIGCF_PRESENT)
 
 hdev_info = api.exec_function_setupapi("SetupDiGetClassDevs", byref(guid), None, None, flags)
-~~~
+```
 
 [Good resources of WinUsb if you develop using this low level layer](http://msdn.microsoft.com/en-us/library/windows/hardware/ff540174(v=vs.85).aspx)
 
@@ -51,46 +51,46 @@ High Level Api
 ========
 Built on top of the low level wrapper is a more usable api to perform common USB operations. Here it is list of defined functions:
 
-~~~
+``` python
 # Possible keyword arguments: default, present, allclasses, profile, deviceinterface (Boolean), Usually called as follows list_usb_devices(deviceinterface=True, present=True)
-def list_usb_devices(self, **kwargs)
+def list_usb_devices(self, **kwargs):
 
 # vid and pid must be str, returns True if device was correctly initialized and False otherwise
-def init_winusb_device(self, vid, pid) 
+def init_winusb_device(self, vid, pid): 
 
 # Returns True if device was correctly closed and False otherwise.
-def close_winusb_device(self)
+def close_winusb_device(self):
 
 # Returns last error code. See http://msdn.microsoft.com/en-us/library/windows/desktop/ms681382%28v=vs.85%29.aspx
-def get_last_error_code(self)
+def get_last_error_code(self):
 
 # Returns information for a open device (0x03:High Speed, 0x01:full-speed or lower), query=1 in order to get USB speed.
-def query_device_info(self, query=1)
+def query_device_info(self, query=1):
 
 # Returns a UsbInterfaceDescriptor object with information about a specified interface
-def query_interface_settings(self, index)
+def query_interface_settings(self, index):
 
 # Change current interface, Winusb opens first interface (0 index) when a device is initialized
-def change_interface(self, index)
+def change_interface(self, index):
 
 # Returns a PipeInfo object with information of a specified pipe within current interface
-def query_pipe(self, pipe_index)
+def query_pipe(self, pipe_index):
 
 # Send a control requesto to open device, setup_packet is a UsbSetupPacket object.
 # buff = None implies no data is going to be transferred besides setup packet
 # buff = [0] create a buffer of length 1. Buffer could be IN or OUT, direction is defined in setup packet
-def control_transfer(self, setup_packet, buff=None)
+def control_transfer(self, setup_packet, buff=None):
 
 #Send Bulk data to the Usb device, write_buffer must be a str buffer
-def write(self, pipe_id, write_buffer)
+def write(self, pipe_id, write_buffer):
 
 #Read Bulk data from the Usb device, Returns of a buffer not greater than length_buffer length
-def read(self, pipe_id, length_buffer)
-~~~
+def read(self, pipe_id, length_buffer):
+```
 
 Let's say hello to our device:
 
-~~~
+``` python
 from winusbpy import *
 vid = "vid_device" # for example: VID:067b PID:2303
 pid = "pid_device"
@@ -100,7 +100,7 @@ result = api.list_usb_devices(deviceinterface=True, present=True)
 if result:
   if api.init_winusb_device(pl2303_vid, pl2303_pid):
     api.write(0x02, hello)
-~~~
+```
 
 Real examples
 ========
