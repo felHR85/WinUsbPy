@@ -79,6 +79,7 @@ def query_pipe(self, pipe_index):
 # Send a control requesto to open device, setup_packet is a UsbSetupPacket object.
 # buff = None implies no data is going to be transferred besides setup packet
 # buff = [0] create a buffer of length 1. Buffer could be IN or OUT, direction is defined in setup packet
+# it returns a dict with the response and with the buffer under the keywords 'result' and 'buffer'
 def control_transfer(self, setup_packet, buff=None):
 
 #Send Bulk data to the Usb device, write_buffer must be a str buffer
