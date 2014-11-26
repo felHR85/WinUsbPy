@@ -1,6 +1,6 @@
+"""Test2: PL2303 serial port user-space driver using WINUSB high level api"""
 import time
-from winusbpy import WinUsbPy
-from winusbutils import UsbSetupPacket
+from winusbpy import *
 pl2303_vid = "067b"
 pl2303_pid = "2303"
 

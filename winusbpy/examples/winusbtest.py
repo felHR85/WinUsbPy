@@ -1,7 +1,6 @@
-"""Test1: PL2303 serial port user-space driver using WINUSB"""
+"""Test1: PL2303 serial port user-space driver using WINUSB low level api"""
 import time
-from winusb import WinUSBApi
-from winusbutils import *
+from winusbpy import *
 from ctypes import *
 from ctypes.wintypes import *
 from winusbclasses import DIGCF_DEVICE_INTERFACE, DIGCF_PRESENT, GENERIC_WRITE, GENERIC_READ, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, FILE_FLAG_OVERLAPPED, INVALID_HANDLE_VALUE
