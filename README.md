@@ -99,7 +99,7 @@ api = WinUsbPy()
 result = api.list_usb_devices(deviceinterface=True, present=True)
 if result:
   if api.init_winusb_device(pl2303_vid, pl2303_pid):
-    api.write(0x02, hello)
+    api.write(0x02, "hello")
 ```
 
 Real examples
