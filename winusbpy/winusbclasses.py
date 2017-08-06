@@ -27,15 +27,22 @@ PIPE_TYPE_BULK = 2
 PIPE_TYPE_INTERRUPT = 3
 
 
+""" Errors """
+ERROR_IO_INCOMPLETE = 996
+ERROR_IO_PENDING = 997
 
 class UsbSetupPacket(Structure):
 	_fields_ = [("request_type", c_ubyte), ("request", c_ubyte),
 				("value", c_ushort), ("index", c_ushort), ("length", c_ushort)]
 
 
-""" LPOVERLAPPED still not defined. It will be NULL """
-class LpOverlapped(Structure):
-	_fields_ = []
+class Overlapped(Structure):
+    _fields_ = [('Internal', LPVOID),
+                ('InternalHigh', LPVOID),
+                ('Offset', DWORD),
+                ('OffsetHigh', DWORD),
+                ('Pointer', LPVOID),
+                ('hEvent', HANDLE),]
 
 
 class UsbInterfaceDescriptor(Structure):
