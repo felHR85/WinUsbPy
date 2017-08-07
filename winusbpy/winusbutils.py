@@ -1,10 +1,11 @@
 from ctypes	import *
 from ctypes.wintypes import *
-from winusbclasses import UsbSetupPacket,LpOverlapped, UsbInterfaceDescriptor, LpSecurityAttributes, GUID, SpDevinfoData, SpDeviceInterfaceData, SpDeviceInterfaceDetailData, PipeInfo
+from winusbclasses import UsbSetupPacket,Overlapped, UsbInterfaceDescriptor, LpSecurityAttributes, GUID, SpDevinfoData, SpDeviceInterfaceData, SpDeviceInterfaceDetailData, PipeInfo
 
 WinUsb_Initialize = "WinUsb_Initialize"
 WinUsb_ControlTransfer = "WinUsb_ControlTransfer"
 WinUsb_GetDescriptor = "WinUsb_GetDescriptor"
+WinUsb_GetOverlappedResult = "WinUsb_GetOverlappedResult"
 WinUsb_ReadPipe = "WinUsb_ReadPipe"
 WinUsb_WritePipe = "WinUsb_WritePipe"
 WinUsb_Free = "WinUsb_Free"
@@ -49,6 +50,11 @@ def get_winusb_functions(windll):
 	winusb_restypes[WinUsb_GetDescriptor] = BOOL
 	winusb_argtypes[WinUsb_GetDescriptor] = [c_void_p, c_ubyte, c_ubyte, c_ushort, POINTER(c_ubyte), c_ulong, POINTER(c_ulong)]
 
+        #BOOL __stdcall WinUsb_GetOverlappedResult(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ LPOVERLAPPED lpOverlapped,_Out_ LPDWORD lpNumberOfBytesTransferred,_In_ BOOL bWait);
+	winusb_functions[WinUsb_GetOverlappedResult] = windll.WinUsb_GetOverlappedResult
+	winusb_restypes[WinUsb_GetOverlappedResult] = BOOL
+	#winusb_argtypes[WinUsb_GetOverlappedResult] = []
+        
 	#BOOL __stdcall WinUsb_ReadPipe( _In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ UCHAR PipeID,_Out_ PUCHAR Buffer,_In_ ULONG BufferLength,_Out_opt_ PULONG LengthTransferred,_In_opt_ LPOVERLAPPED Overlapped);
 	winusb_functions[WinUsb_ReadPipe] = windll.WinUsb_ReadPipe
 	#winusb_restypes[WinUsb_ReadPipe] = BOOL
@@ -101,7 +107,7 @@ def get_kernel32_functions(kernel32):
 	#BOOL WINAPI ReadFile(_In_ HANDLE hFile,_Out_ LPVOID lpBuffer,_In_ DWORD nNumberOfBytesToRead,_Out_opt_ LPDWORD lpNumberOfBytesRead,_Inout_opt_ LPOVERLAPPED lpOverlapped);
 	kernel32_functions[ReadFile] = kernel32.ReadFile
 	kernel32_restypes[ReadFile] = BOOL
-	kernel32_argtypes[ReadFile] = [HANDLE, c_void_p, DWORD, POINTER(DWORD), LpOverlapped]
+	kernel32_argtypes[ReadFile] = [HANDLE, c_void_p, DWORD, POINTER(DWORD), POINTER(Overlapped)]
 
 	#BOOL WINAPI CancelIo(_In_  HANDLE hFile);
 	kernel32_functions[CancelIo] = kernel32.CancelIo
@@ -111,7 +117,7 @@ def get_kernel32_functions(kernel32):
 	#BOOL WINAPI WriteFile(_In_ HANDLE hFile,_In_ LPCVOID lpBuffer,_In_ DWORD nNumberOfBytesToWrite,_Out_opt_ LPDWORD lpNumberOfBytesWritten,_Inout_opt_  LPOVERLAPPED lpOverlapped);
 	kernel32_functions[WriteFile] = kernel32.WriteFile
 	kernel32_restypes[WriteFile] = BOOL
-	kernel32_argtypes[WriteFile] = [HANDLE, c_void_p, DWORD, POINTER(DWORD), LpOverlapped]
+	kernel32_argtypes[WriteFile] = [HANDLE, c_void_p, DWORD, POINTER(DWORD), POINTER(Overlapped)]
 
 	#BOOL WINAPI SetEvent(_In_ HANDLE hEvent);
 	kernel32_functions[SetEvent] = kernel32.SetEvent
@@ -167,3 +173,4 @@ def is_device(vid, pid, path):
 		return True
 	else:
 		return False
+

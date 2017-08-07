@@ -1,8 +1,8 @@
 from winusb import WinUSBApi
-from winusbclasses import GUID, DIGCF_ALLCLASSES, DIGCF_DEFAULT, DIGCF_PRESENT, DIGCF_PROFILE, DIGCF_DEVICE_INTERFACE, SpDeviceInterfaceData,  SpDeviceInterfaceDetailData, SpDevinfoData, GENERIC_WRITE, GENERIC_READ, FILE_SHARE_WRITE, FILE_SHARE_READ, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, FILE_FLAG_OVERLAPPED, INVALID_HANDLE_VALUE, UsbInterfaceDescriptor, PipeInfo
+from winusbclasses import GUID, DIGCF_ALLCLASSES, DIGCF_DEFAULT, DIGCF_PRESENT, DIGCF_PROFILE, DIGCF_DEVICE_INTERFACE, SpDeviceInterfaceData,  SpDeviceInterfaceDetailData, SpDevinfoData, GENERIC_WRITE, GENERIC_READ, FILE_SHARE_WRITE, FILE_SHARE_READ, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, FILE_FLAG_OVERLAPPED, INVALID_HANDLE_VALUE, UsbInterfaceDescriptor, PipeInfo, ERROR_IO_INCOMPLETE, ERROR_IO_PENDING, Overlapped
 from ctypes import c_byte, byref, sizeof, c_ulong, resize, wstring_at, c_void_p, c_ubyte, create_string_buffer
 from ctypes.wintypes import DWORD, WCHAR
-from winusbutils import SetupDiGetClassDevs, SetupDiEnumDeviceInterfaces, SetupDiGetDeviceInterfaceDetail, is_device, CreateFile, WinUsb_Initialize, Close_Handle, WinUsb_Free, GetLastError, WinUsb_QueryDeviceInformation, WinUsb_GetAssociatedInterface, WinUsb_QueryInterfaceSettings, WinUsb_QueryPipe, WinUsb_ControlTransfer, WinUsb_WritePipe, WinUsb_ReadPipe
+from winusbutils import SetupDiGetClassDevs, SetupDiEnumDeviceInterfaces, SetupDiGetDeviceInterfaceDetail, is_device, CreateFile, WinUsb_Initialize, Close_Handle, WinUsb_Free, GetLastError, WinUsb_QueryDeviceInformation, WinUsb_GetAssociatedInterface, WinUsb_QueryInterfaceSettings, WinUsb_QueryPipe, WinUsb_ControlTransfer, WinUsb_WritePipe, WinUsb_ReadPipe, WinUsb_GetOverlappedResult
 
 class WinUsbPy(object):
 
@@ -12,7 +12,7 @@ class WinUsbPy(object):
 		self.guid = GUID(0xA5DCBF10L, 0x6530, 0x11D2, byte_array(0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED))
 		self.handle_file = INVALID_HANDLE_VALUE
 		self.handle_winusb = c_void_p()
-		self._index = -1 
+		self._index = -1
 
 
 	def list_usb_devices(self, **kwargs):
@@ -171,7 +171,39 @@ class WinUsbPy(object):
 		else:
 			return None
 
+                
 
-	
+        def _overlapped_read_do(self,pipe_id):
+                self.olread_ol.Internal = 0
+                self.olread_ol.InternalHigh = 0
+                self.olread_ol.Offset = 0
+                self.olread_ol.OffsetHigh = 0
+                self.olread_ol.Pointer = 0
+                self.olread_ol.hEvent = 0                
+		result = self.api.exec_function_winusb(WinUsb_ReadPipe, self.handle_winusb, c_ubyte(pipe_id), self.olread_buf, c_ulong(self.olread_buflen), byref(c_ulong(0)), byref(self.olread_ol))
+		if result != 0:
+			return True
+		else:
+			return False
+                
+	def overlapped_read_init(self, pipe_id, length_buffer):
+                self.olread_ol = Overlapped()
+                self.olread_buf = create_string_buffer(length_buffer);
+                self.olread_buflen = length_buffer
+                return self._overlapped_read_do(pipe_id)
 
+	def overlapped_read(self, pipe_id):
+                """ keep on reading overlapped, return bytearray, empty if nothing to read, None if err"""
+                rl = c_ulong(0)
+		result = self.api.exec_function_winusb(WinUsb_GetOverlappedResult, self.handle_winusb, byref(self.olread_ol),byref(rl),False)
+                if result == 0:
+                        if self.get_last_error_code() == ERROR_IO_PENDING or \
+                           self.get_last_error_code() == ERROR_IO_INCOMPLETE:
+                                return ""
+                        else:
+                                return None
+                else:
+                        ret = str(self.olread_buf[0:rl.value])
+                        self._overlapped_read_do(pipe_id)
+                        return ret
 
