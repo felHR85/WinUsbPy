@@ -144,7 +144,7 @@ def get_kernel32_functions(kernel32):
     kernel32_dict["argtypes"] = kernel32_argtypes
     return kernel32_dict
 
-    
+
 def get_setupapi_functions(setupapi):
     setupapi_dict = {}
     setupapi_functions = {}
@@ -176,7 +176,7 @@ def get_setupapi_functions(setupapi):
 
 
 def is_device(vid, pid, path):
-    if path.find(vid) != -1 and path.find(pid) != -1:
+    if path.lower().find('vid_%04x' % int(str(vid), 0)) != -1 and path.lower().find('pid_%04x' % int(str(pid), 0)) != -1:
         return True
     else:
         return False
