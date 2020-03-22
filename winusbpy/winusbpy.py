@@ -1,3 +1,5 @@
+import struct
+import ctypes
 from .winusb import WinUSBApi
 from .winusbclasses import GUID, DIGCF_ALLCLASSES, DIGCF_DEFAULT, DIGCF_PRESENT, DIGCF_PROFILE, DIGCF_DEVICE_INTERFACE, \
     SpDeviceInterfaceData,  SpDeviceInterfaceDetailData, SpDevinfoData, GENERIC_WRITE, GENERIC_READ, FILE_SHARE_WRITE, \
@@ -9,6 +11,10 @@ from .winusbutils import SetupDiGetClassDevs, SetupDiEnumDeviceInterfaces, Setup
     CreateFile, WinUsb_Initialize, Close_Handle, WinUsb_Free, GetLastError, WinUsb_QueryDeviceInformation, \
     WinUsb_GetAssociatedInterface, WinUsb_QueryInterfaceSettings, WinUsb_QueryPipe, WinUsb_ControlTransfer, \
     WinUsb_WritePipe, WinUsb_ReadPipe, WinUsb_GetOverlappedResult
+
+
+def is_64bit():
+    return struct.calcsize('P') * 8 == 64
 
 
 class WinUsbPy(object):
@@ -49,7 +55,7 @@ class WinUsbPy(object):
         sp_device_info_data = SpDevinfoData()
         sp_device_info_data.cb_size = sizeof(sp_device_info_data)
         i = 0
-        required_size = c_ulong(0)
+        required_size = DWORD(0)
         member_index = DWORD(i)
 
         while self.api.exec_function_setupapi(SetupDiEnumDeviceInterfaces, self.handle, None, byref(self.guid),
@@ -57,17 +63,23 @@ class WinUsbPy(object):
             self.api.exec_function_setupapi(SetupDiGetDeviceInterfaceDetail, self.handle,
                                             byref(sp_device_interface_data), None, 0, byref(required_size), None)
             resize(sp_device_interface_detail_data, required_size.value)
-            sp_device_interface_detail_data.cb_size = sizeof(SpDeviceInterfaceDetailData) - sizeof(WCHAR * 1)
+            if is_64bit():
+                sp_device_interface_detail_data.cb_size = 8
+            else:
+                sp_device_interface_detail_data.cb_size = 5
+
             if self.api.exec_function_setupapi(SetupDiGetDeviceInterfaceDetail, self.handle,
                                                byref(sp_device_interface_data), byref(sp_device_interface_detail_data),
                                                required_size, byref(required_size), byref(sp_device_info_data)):
                 path = wstring_at(byref(sp_device_interface_detail_data, sizeof(DWORD)))
                 self.device_paths.append(path)
+            else:
+                raise ctypes.WinError()
             i += 1
             member_index = DWORD(i)
             required_size = c_ulong(0)
             resize(sp_device_interface_detail_data, sizeof(SpDeviceInterfaceDetailData))
-        return len(self.device_paths) > 0
+        return self.device_paths
 
     def find_device(self, path):
         return is_device(self._vid, self._pid, path)
