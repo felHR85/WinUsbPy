@@ -27,6 +27,7 @@ GetLastError = "GetLastError"
 SetupDiGetClassDevs = "SetupDiGetClassDevs"
 SetupDiEnumDeviceInterfaces = "SetupDiEnumDeviceInterfaces"
 SetupDiGetDeviceInterfaceDetail = "SetupDiGetDeviceInterfaceDetail"
+SetupDiEnumDeviceInfo = "SetupDiEnumDeviceInfo"
 
 
 def get_winusb_functions(windll):
@@ -132,7 +133,8 @@ def get_kernel32_functions(kernel32):
     kernel32_argtypes[WaitForSingleObject] = [HANDLE, DWORD]
 
     # HANDLE WINAPI CreateFile(_In_ LPCTSTR lpFileName,_In_ DWORD dwDesiredAccess,_In_ DWORD dwShareMode,_In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,_In_ DWORD dwCreationDisposition,_In_ DWORD dwFlagsAndAttributes,_In_opt_ HANDLE hTemplateFile);
-    kernel32_functions[CreateFile] = kernel32.CreateFileW 
+    kernel32_functions[CreateFile] = kernel32.CreateFileW
+    kernel32_restypes[CreateFile] = HANDLE
 
     # DWORD WINAPI GetLastError(void)
     kernel32_functions[GetLastError] = kernel32.GetLastError
@@ -168,6 +170,11 @@ def get_setupapi_functions(setupapi):
     setupapi_argtypes[SetupDiGetDeviceInterfaceDetail] = [c_void_p, POINTER(SpDeviceInterfaceData),
                                                           POINTER(SpDeviceInterfaceDetailData), DWORD, POINTER(DWORD),
                                                           POINTER(SpDevinfoData)]
+
+    # BOOL SetupDiEnumDeviceInfo(HDEVINFO DeviceInfoSet, DWORD MemberIndex, PSP_DEVINFO_DATA DeviceInfoData);
+    setupapi_functions[SetupDiEnumDeviceInfo] = setupapi.SetupDiEnumDeviceInfo
+    setupapi_restypes[SetupDiEnumDeviceInfo] = BOOL
+    setupapi_argtypes[SetupDiEnumDeviceInfo] = [c_void_p, DWORD, POINTER(SpDevinfoData)]
 
     setupapi_dict["functions"] = setupapi_functions
     setupapi_dict["restypes"] = setupapi_restypes

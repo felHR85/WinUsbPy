@@ -10,7 +10,7 @@ from ctypes.wintypes import DWORD, WCHAR
 from .winusbutils import SetupDiGetClassDevs, SetupDiEnumDeviceInterfaces, SetupDiGetDeviceInterfaceDetail, is_device, \
     CreateFile, WinUsb_Initialize, Close_Handle, WinUsb_Free, GetLastError, WinUsb_QueryDeviceInformation, \
     WinUsb_GetAssociatedInterface, WinUsb_QueryInterfaceSettings, WinUsb_QueryPipe, WinUsb_ControlTransfer, \
-    WinUsb_WritePipe, WinUsb_ReadPipe, WinUsb_GetOverlappedResult
+    WinUsb_WritePipe, WinUsb_ReadPipe, WinUsb_GetOverlappedResult, SetupDiEnumDeviceInfo
 
 
 def is_64bit():
@@ -22,7 +22,9 @@ class WinUsbPy(object):
     def __init__(self):
         self.api = WinUSBApi()
         byte_array = c_byte * 8
-        self.guid = GUID(0xA5DCBF10, 0x6530, 0x11D2, byte_array(0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED))
+        self.usb_device_guid = GUID(0xA5DCBF10, 0x6530, 0x11D2, byte_array(0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED))
+        self.usb_winusb_guid = GUID(0xdee824ef, 0x729b, 0x4a0e, byte_array(0x9c, 0x14, 0xb7, 0x11, 0x7d, 0x33, 0xa8, 0x17))
+        self.usb_composite_guid = GUID(0x36FC9E60, 0xC465, 0x11CF, byte_array(0x80, 0x56, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00))
         self.handle_file = INVALID_HANDLE_VALUE
         self.handle_winusb = c_void_p()
         self._index = -1
@@ -47,26 +49,27 @@ class WinUsbPy(object):
             pass
 
         flags = DWORD(value)
-        self.handle = self.api.exec_function_setupapi(SetupDiGetClassDevs, byref(self.guid), None, None, flags)
+        self.handle = self.api.exec_function_setupapi(SetupDiGetClassDevs, byref(self.usb_winusb_guid), None, None, flags)
 
         sp_device_interface_data = SpDeviceInterfaceData()
         sp_device_interface_data.cb_size = sizeof(sp_device_interface_data)
         sp_device_interface_detail_data = SpDeviceInterfaceDetailData()
         sp_device_info_data = SpDevinfoData()
         sp_device_info_data.cb_size = sizeof(sp_device_info_data)
+        if is_64bit():
+            sp_device_interface_detail_data.cb_size = 8
+        else:
+            sp_device_interface_detail_data.cb_size = 5
+
         i = 0
         required_size = DWORD(0)
         member_index = DWORD(i)
 
-        while self.api.exec_function_setupapi(SetupDiEnumDeviceInterfaces, self.handle, None, byref(self.guid),
+        while self.api.exec_function_setupapi(SetupDiEnumDeviceInterfaces, self.handle, None, byref(self.usb_winusb_guid),
                                               member_index, byref(sp_device_interface_data)):
             self.api.exec_function_setupapi(SetupDiGetDeviceInterfaceDetail, self.handle,
                                             byref(sp_device_interface_data), None, 0, byref(required_size), None)
             resize(sp_device_interface_detail_data, required_size.value)
-            if is_64bit():
-                sp_device_interface_detail_data.cb_size = 8
-            else:
-                sp_device_interface_detail_data.cb_size = 5
 
             if self.api.exec_function_setupapi(SetupDiGetDeviceInterfaceDetail, self.handle,
                                                byref(sp_device_interface_data), byref(sp_device_interface_detail_data),
@@ -102,7 +105,9 @@ class WinUsbPy(object):
             return False
         result = self.api.exec_function_winusb(WinUsb_Initialize, self.handle_file, byref(self.handle_winusb))
         if result == 0:
-            return False
+            err = self.get_last_error_code()
+            raise ctypes.WinError()
+            # return False
         else:
             self._index = 0
             return True
