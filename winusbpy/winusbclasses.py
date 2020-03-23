@@ -1,6 +1,12 @@
 from ctypes import *
 from ctypes.wintypes import *
 
+_ole32 = oledll.ole32
+
+_StringFromCLSID = _ole32.StringFromCLSID
+_CoTaskMemFree = windll.ole32.CoTaskMemFree
+
+
 """Flags controlling what is included in the device information set built by SetupDiGetClassDevs"""
 DIGCF_DEFAULT = 0x00000001
 DIGCF_PRESENT = 0x00000002
@@ -67,6 +73,37 @@ class LpSecurityAttributes(Structure):
 class GUID(Structure):
     _fields_ = [("data1", DWORD), ("data2", WORD),
                 ("data3", WORD), ("data4", c_byte * 8)]
+
+    def __repr__(self):
+        return u'GUID("%s")' % str(self)
+
+    def __str__(self):
+        p = c_wchar_p()
+        _StringFromCLSID(byref(self), byref(p))
+        result = p.value
+        _CoTaskMemFree(p)
+        return result
+
+    def __cmp__(self, other):
+        if isinstance(other, GUID):
+            a = bytes(self)
+            b = bytes(other)
+            return (a > b) - (a < b)
+        return -1
+
+    def __nonzero__(self):
+        return self != GUID_null
+
+    def __eq__(self, other):
+        return isinstance(other, GUID) and \
+               bytes(self) == bytes(other)
+
+    def __hash__(self):
+        # We make GUID instances hashable, although they are mutable.
+        return hash(bytes(self))
+
+
+GUID_null = GUID()
 
 
 class SpDevinfoData(Structure):
