@@ -96,8 +96,7 @@ class WinUsbPy(object):
 
                 name = buff_friendly_name.value
             else:
-                err = self.get_last_error_code()
-                print(err)
+                print(ctypes.WinError()
             self.device_paths[name] = path
             i += 1
             member_index = DWORD(i)
@@ -207,8 +206,10 @@ class WinUsbPy(object):
 
     def write(self, pipe_id, write_buffer):
         write_buffer = create_string_buffer(write_buffer)
-        return self.api.exec_function_winusb(WinUsb_WritePipe, self.handle_winusb, c_ubyte(pipe_id), write_buffer,
-                                             c_ulong(len(write_buffer) - 1), byref(c_ulong(0)), None)
+        written = c_ulong(0)
+        self.api.exec_function_winusb(WinUsb_WritePipe, self.handle_winusb[self._index], c_ubyte(pipe_id), write_buffer,
+                                      c_ulong(len(write_buffer) - 1), byref(written), None)
+        return written.value
 
     def read(self, pipe_id, length_buffer):
         read_buffer = create_string_buffer(length_buffer)
