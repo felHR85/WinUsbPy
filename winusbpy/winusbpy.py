@@ -10,7 +10,7 @@ from ctypes.wintypes import DWORD, WCHAR
 from .winusbutils import SetupDiGetClassDevs, SetupDiEnumDeviceInterfaces, SetupDiGetDeviceInterfaceDetail, is_device, \
     CreateFile, WinUsb_Initialize, Close_Handle, WinUsb_Free, GetLastError, WinUsb_QueryDeviceInformation, \
     WinUsb_GetAssociatedInterface, WinUsb_QueryInterfaceSettings, WinUsb_QueryPipe, WinUsb_ControlTransfer, \
-    WinUsb_WritePipe, WinUsb_ReadPipe, WinUsb_GetOverlappedResult, SetupDiEnumDeviceInfo
+    WinUsb_WritePipe, WinUsb_ReadPipe, WinUsb_GetOverlappedResult, SetupDiGetDeviceRegistryProperty, SPDRP_FRIENDLYNAME
 
 
 def is_64bit():
@@ -30,7 +30,7 @@ class WinUsbPy(object):
         self._index = -1
 
     def list_usb_devices(self, **kwargs):
-        self.device_paths = []
+        self.device_paths = {}
         value = 0x00000000
         try:
             if kwargs.get("default"):
@@ -56,14 +56,11 @@ class WinUsbPy(object):
         sp_device_interface_detail_data = SpDeviceInterfaceDetailData()
         sp_device_info_data = SpDevinfoData()
         sp_device_info_data.cb_size = sizeof(sp_device_info_data)
-        if is_64bit():
-            sp_device_interface_detail_data.cb_size = 8
-        else:
-            sp_device_interface_detail_data.cb_size = 5
 
         i = 0
         required_size = DWORD(0)
         member_index = DWORD(i)
+        cb_sizes = (8, 6, 5)  # different on 64 bit / 32 bit etc
 
         while self.api.exec_function_setupapi(SetupDiEnumDeviceInterfaces, self.handle, None, byref(self.usb_winusb_guid),
                                               member_index, byref(sp_device_interface_data)):
@@ -71,13 +68,36 @@ class WinUsbPy(object):
                                             byref(sp_device_interface_data), None, 0, byref(required_size), None)
             resize(sp_device_interface_detail_data, required_size.value)
 
-            if self.api.exec_function_setupapi(SetupDiGetDeviceInterfaceDetail, self.handle,
+
+            path = None
+            for cb_size in cb_sizes:
+                sp_device_interface_detail_data.cb_size = cb_size
+                ret = self.api.exec_function_setupapi(SetupDiGetDeviceInterfaceDetail, self.handle,
                                                byref(sp_device_interface_data), byref(sp_device_interface_detail_data),
-                                               required_size, byref(required_size), byref(sp_device_info_data)):
-                path = wstring_at(byref(sp_device_interface_detail_data, sizeof(DWORD)))
-                self.device_paths.append(path)
-            else:
+                                               required_size, byref(required_size), byref(sp_device_info_data))
+                if ret:
+                    cb_sizes = (cb_size, )
+                    path = wstring_at(byref(sp_device_interface_detail_data, sizeof(DWORD)))
+                    break
+            if path is None:
                 raise ctypes.WinError()
+
+            # friendly name
+            name = path
+            buff_friendly_name = ctypes.create_unicode_buffer(250)
+            if self.api.exec_function_setupapi(SetupDiGetDeviceRegistryProperty, self.handle,
+                                               byref(sp_device_info_data),
+                                               SPDRP_FRIENDLYNAME,
+                                               None,
+                                               ctypes.byref(buff_friendly_name),
+                                               ctypes.sizeof(buff_friendly_name) - 1,
+                                               None):
+
+                name = buff_friendly_name.value
+            else:
+                err = self.get_last_error_code()
+                print(err)
+            self.device_paths[name] = path
             i += 1
             member_index = DWORD(i)
             required_size = c_ulong(0)
@@ -85,15 +105,16 @@ class WinUsbPy(object):
         return self.device_paths
 
     def find_device(self, path):
-        return is_device(self._vid, self._pid, path)
+        return is_device(self._name, self._vid, self._pid, path)
 
-    def init_winusb_device(self, vid, pid):
+    def init_winusb_device(self, name, vid, pid):
         self._vid = vid
         self._pid = pid
+        self._name = name
         try:
             ftr = filter(self.find_device, self.device_paths)
             paths = [p for p in ftr]
-            path = paths[0]
+            path = self.device_paths[paths[0]]
         except IndexError:
             return False
 

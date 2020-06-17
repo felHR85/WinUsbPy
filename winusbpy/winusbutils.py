@@ -27,7 +27,13 @@ GetLastError = "GetLastError"
 SetupDiGetClassDevs = "SetupDiGetClassDevs"
 SetupDiEnumDeviceInterfaces = "SetupDiEnumDeviceInterfaces"
 SetupDiGetDeviceInterfaceDetail = "SetupDiGetDeviceInterfaceDetail"
+SetupDiGetDeviceRegistryProperty = "SetupDiGetDeviceRegistryProperty"
 SetupDiEnumDeviceInfo = "SetupDiEnumDeviceInfo"
+
+SPDRP_HARDWAREID = 1
+SPDRP_FRIENDLYNAME = 12
+SPDRP_LOCATION_PATHS = 35
+SPDRP_MFG = 11
 
 
 def get_winusb_functions(windll):
@@ -171,6 +177,14 @@ def get_setupapi_functions(setupapi):
                                                           POINTER(SpDeviceInterfaceDetailData), DWORD, POINTER(DWORD),
                                                           POINTER(SpDevinfoData)]
 
+    # BOOL SetupDiGetDeviceInterfaceDetail(_In_ HDEVINFO DeviceInfoSet,_In_ PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData,_Out_opt_ PSP_DEVICE_INTERFACE_DETAIL_DATA DeviceInterfaceDetailData,_In_ DWORD DeviceInterfaceDetailDataSize,_Out_opt_  PDWORD RequiredSize,_Out_opt_  PSP_DEVINFO_DATA DeviceInfoData);
+    setupapi_functions[SetupDiGetDeviceRegistryProperty] = setupapi.SetupDiGetDeviceRegistryPropertyW
+    setupapi_restypes[SetupDiGetDeviceRegistryProperty] = BOOL
+    setupapi_argtypes[SetupDiGetDeviceRegistryProperty] = [c_void_p, POINTER(SpDevinfoData),
+                                                          DWORD, POINTER(DWORD),
+                                                          c_void_p, DWORD, POINTER(DWORD)]
+    # [HDEVINFO, PSP_DEVINFO_DATA, DWORD, PDWORD, PBYTE, DWORD, PDWORD]
+
     # BOOL SetupDiEnumDeviceInfo(HDEVINFO DeviceInfoSet, DWORD MemberIndex, PSP_DEVINFO_DATA DeviceInfoData);
     setupapi_functions[SetupDiEnumDeviceInfo] = setupapi.SetupDiEnumDeviceInfo
     setupapi_restypes[SetupDiEnumDeviceInfo] = BOOL
@@ -182,8 +196,11 @@ def get_setupapi_functions(setupapi):
     return setupapi_dict
 
 
-def is_device(vid, pid, path):
-    if path.lower().find('vid_%04x' % int(str(vid), 0)) != -1 and path.lower().find('pid_%04x' % int(str(pid), 0)) != -1:
+def is_device(vid, pid, path, name=None):
+    if name and name.lower() == path.lower():
         return True
+    if vid and pid:
+        if path.lower().find('vid_%04x' % int(str(vid), 0)) != -1 and path.lower().find('pid_%04x' % int(str(pid), 0)) != -1:
+            return True
     else:
         return False
