@@ -7,8 +7,10 @@ WinUsb_Initialize = "WinUsb_Initialize"
 WinUsb_ControlTransfer = "WinUsb_ControlTransfer"
 WinUsb_GetDescriptor = "WinUsb_GetDescriptor"
 WinUsb_GetOverlappedResult = "WinUsb_GetOverlappedResult"
+WinUsb_SetPipePolicy = "WinUsb_SetPipePolicy"
 WinUsb_ReadPipe = "WinUsb_ReadPipe"
 WinUsb_WritePipe = "WinUsb_WritePipe"
+WinUsb_FlushPipe = "WinUsb_FlushPipe"
 WinUsb_Free = "WinUsb_Free"
 WinUsb_QueryDeviceInformation = "WinUsb_QueryDeviceInformation"
 WinUsb_QueryInterfaceSettings = "WinUsb_QueryInterfaceSettings"
@@ -68,10 +70,20 @@ def get_winusb_functions(windll):
     # winusb_restypes[WinUsb_ReadPipe] = BOOL
     # winusb_argtypes[WinUsb_ReadPipe] = [c_void_p, c_ubyte, POINTER(c_ubyte), c_ulong, POINTER(c_ulong), LpOverlapped]
 
+    # BOOL __stdcall WinUsb_ReadPipe( _In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ UCHAR PipeID,_Out_ PUCHAR Buffer,_In_ ULONG BufferLength,_Out_opt_ PULONG LengthTransferred,_In_opt_ LPOVERLAPPED Overlapped);
+    winusb_functions[WinUsb_SetPipePolicy] = windll.WinUsb_SetPipePolicy
+    winusb_restypes[WinUsb_SetPipePolicy] = BOOL
+    winusb_argtypes[WinUsb_SetPipePolicy] = [c_void_p, c_ubyte, c_ulong, c_ulong, c_void_p]
+
     # BOOL __stdcall WinUsb_WritePipe(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle,_In_ UCHAR PipeID,_In_ PUCHAR Buffer,_In_ ULONG BufferLength,_Out_opt_  PULONG LengthTransferred,_In_opt_ LPOVERLAPPED Overlapped);
     winusb_functions[WinUsb_WritePipe] = windll.WinUsb_WritePipe
     # winusb_restypes[WinUsb_WritePipe] = BOOL
     # winusb_argtypes[WinUsb_WritePipe] = [c_void_p, c_ubyte, POINTER(c_ubyte), c_ulong, POINTER(c_ulong), LpOverlapped]
+
+    # BOOL __stdcall WinUsb_FlushPipe(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle);
+    winusb_functions[WinUsb_FlushPipe] = windll.WinUsb_FlushPipe
+    winusb_restypes[WinUsb_FlushPipe] = BOOL
+    winusb_argtypes[WinUsb_FlushPipe] = [c_void_p, c_ubyte]
 
     # BOOL __stdcall WinUsb_Free(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle);
     winusb_functions[WinUsb_Free] = windll.WinUsb_Free

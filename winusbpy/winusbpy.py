@@ -10,7 +10,8 @@ from ctypes.wintypes import DWORD, WCHAR
 from .winusbutils import SetupDiGetClassDevs, SetupDiEnumDeviceInterfaces, SetupDiGetDeviceInterfaceDetail, is_device, \
     CreateFile, WinUsb_Initialize, Close_Handle, WinUsb_Free, GetLastError, WinUsb_QueryDeviceInformation, \
     WinUsb_GetAssociatedInterface, WinUsb_QueryInterfaceSettings, WinUsb_QueryPipe, WinUsb_ControlTransfer, \
-    WinUsb_WritePipe, WinUsb_ReadPipe, WinUsb_GetOverlappedResult, SetupDiGetDeviceRegistryProperty, SPDRP_FRIENDLYNAME
+    WinUsb_WritePipe, WinUsb_ReadPipe, WinUsb_GetOverlappedResult, SetupDiGetDeviceRegistryProperty, \
+    WinUsb_SetPipePolicy, WinUsb_FlushPipe, SPDRP_FRIENDLYNAME
 
 
 def is_64bit():
@@ -218,6 +219,27 @@ class WinUsbPy(object):
         else:
             return None
 
+    def set_timeout(self, pipe_id, timeout):
+        class POLICY_TYPE:
+            SHORT_PACKET_TERMINATE = 1
+            AUTO_CLEAR_STALL = 2
+            PIPE_TRANSFER_TIMEOUT = 3
+            IGNORE_SHORT_PACKETS = 4
+            ALLOW_PARTIAL_READS = 5
+            AUTO_FLUSH = 6
+            RAW_IO = 7
+
+        policy_type = c_ulong(POLICY_TYPE.PIPE_TRANSFER_TIMEOUT)
+        value_length = c_ulong(4)
+        value = c_ulong(int(timeout * 1000))  # in ms
+        result = self.api.exec_function_winusb(WinUsb_SetPipePolicy, self.handle_winusb[self._index], c_ubyte(pipe_id),
+                                               policy_type, value_length, byref(value))
+        return result
+
+    def flush(self, pipe_id):
+        result = self.api.exec_function_winusb(WinUsb_FlushPipe, self.handle_winusb[self._index], c_ubyte(pipe_id))
+        return result
+
     def _overlapped_read_do(self,pipe_id):
         self.olread_ol.Internal = 0
         self.olread_ol.InternalHigh = 0
@@ -234,7 +256,7 @@ class WinUsbPy(object):
                 
     def overlapped_read_init(self, pipe_id, length_buffer):
         self.olread_ol = Overlapped()
-        self.olread_buf = create_string_buffer(length_buffer);
+        self.olread_buf = create_string_buffer(length_buffer)
         self.olread_buflen = length_buffer
         return self._overlapped_read_do(pipe_id)
 
