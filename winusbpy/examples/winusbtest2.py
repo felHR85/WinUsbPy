@@ -48,7 +48,7 @@ tx12 = b"\x00"
 
 api = WinUsbPy()
 result = api.list_usb_devices(deviceinterface=True, present=True)
-if result > 0:
+if result:
     if api.init_winusb_device(pl2303_vid, pl2303_pid):
         speed = api.query_device_info(query=1)
         if speed != -1:
