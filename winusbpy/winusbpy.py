@@ -96,7 +96,7 @@ class WinUsbPy(object):
 
                 name = buff_friendly_name.value
             else:
-                print(ctypes.WinError()
+                print(ctypes.WinError())
             self.device_paths[name] = path
             i += 1
             member_index = DWORD(i)
